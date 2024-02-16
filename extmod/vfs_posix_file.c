@@ -64,6 +64,7 @@ STATIC void vfs_posix_file_print(const mp_print_t *print, mp_obj_t self_in, mp_p
 
 mp_obj_t mp_vfs_posix_file_open(const mp_obj_type_t *type, mp_obj_t file_in, mp_obj_t mode_in) {
     mp_obj_vfs_posix_file_t *o = m_new_obj_with_finaliser(mp_obj_vfs_posix_file_t);
+    o->fd = -1;   // In case open() fails below, initialise this as a "closed" file object.
     const char *mode_s = mp_obj_str_get_str(mode_in);
 
     int mode_rw = 0, mode_x = 0;
@@ -96,14 +97,13 @@ mp_obj_t mp_vfs_posix_file_open(const mp_obj_type_t *type, mp_obj_t file_in, mp_
 
     mp_obj_t fid = file_in;
 
-    if (mp_obj_is_small_int(fid)) {
-        o->fd = MP_OBJ_SMALL_INT_VALUE(fid);
-        return MP_OBJ_FROM_PTR(o);
-    }
-
-    const char *fname = mp_obj_str_get_str(fid);
     int fd;
-    MP_HAL_RETRY_SYSCALL(fd, open(fname, mode_x | mode_rw, 0644), mp_raise_OSError(err));
+    if (mp_obj_is_small_int(fid)) {
+        fd = MP_OBJ_SMALL_INT_VALUE(fid);
+    } else {
+        const char *fname = mp_obj_str_get_str(fid);
+        MP_HAL_RETRY_SYSCALL(fd, open(fname, mode_x | mode_rw, 0644), mp_raise_OSError(err));
+    }
     o->fd = fd;
     return MP_OBJ_FROM_PTR(o);
 }
