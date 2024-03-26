@@ -191,6 +191,7 @@ SRC_SHARED_C += $(addprefix shared/,\
 	libc/string0.c \
 	readline/readline.c \
 	runtime/pyexec.c \
+	runtime/softtimer.c \
 	runtime/sys_stdio_mphal.c \
 	runtime/interrupt_char.c \
 	tinyusb/mp_cdc_common.c \
@@ -208,13 +209,13 @@ endif
 SRC_NRFX += $(addprefix lib/nrfx/drivers/src/,\
 	prs/nrfx_prs.c \
 	nrfx_uart.c \
-        nrfx_uarte.c \
+	nrfx_uarte.c \
 	nrfx_adc.c \
 	nrfx_saadc.c \
 	nrfx_temp.c \
 	nrfx_rng.c \
 	nrfx_twi.c \
-        nrfx_twim.c \
+	nrfx_twim.c \
 	nrfx_spi.c \
 	nrfx_spim.c \
 	nrfx_rtc.c \
@@ -229,6 +230,7 @@ SRC_NRFX += $(addprefix lib/nrfx/drivers/src/,\
 SRC_C += \
 	main.c \
 	mphalport.c \
+	pendsv.c \
 	help.c \
 	gccollect.c \
 	pin_named_pins.c \

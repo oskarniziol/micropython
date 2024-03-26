@@ -155,7 +155,6 @@
 #define MICROPY_USE_INTERNAL_ERRNO  (1)
 #if MICROPY_HW_USB_CDC_1200BPS_TOUCH
 #define MICROPY_HW_ENABLE_USBDEV    (1)
-#define MICROPY_ENABLE_SCHEDULER    (1)
 #define MICROPY_SCHEDULER_STATIC_NODES (1)
 #endif
 #define MICROPY_PY_FUNCTION_ATTRS   (1)
@@ -180,9 +179,8 @@
 #define MICROPY_PY_MACHINE_BOOTLOADER (1)
 #define MICROPY_PY_MACHINE_PULSE    (0)
 #define MICROPY_PY_MACHINE_SOFTI2C  (MICROPY_PY_MACHINE_I2C)
-#ifndef MICROPY_ENABLE_SCHEDULER
-#define MICROPY_ENABLE_SCHEDULER    (1)
-#endif
+#define MICROPY_ENABLE_SCHEDULER     (1)
+#define MICROPY_SCHEDULER_STATIC_NODES    (1)
 
 #ifndef MICROPY_HW_LED_COUNT
 #define MICROPY_HW_LED_COUNT        (0)
@@ -389,6 +387,13 @@ static inline mp_uint_t disable_irq(void) {
 #define MICROPY_BEGIN_ATOMIC_SECTION()     disable_irq()
 #define MICROPY_END_ATOMIC_SECTION(state)  enable_irq(state)
 
+#endif
+
+#define MICROPY_SOFT_TIMER_TICKS_MS uwTick
+
+// Additional entries for use with pendsv_schedule_dispatch.
+#ifndef MICROPY_BOARD_PENDSV_ENTRIES
+#define MICROPY_BOARD_PENDSV_ENTRIES
 #endif
 
 #ifndef MICROPY_BOARD_STARTUP
