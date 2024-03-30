@@ -389,8 +389,6 @@ static inline mp_uint_t disable_irq(void) {
 
 #endif
 
-#define MICROPY_SOFT_TIMER_TICKS_MS uwTick
-
 // Additional entries for use with pendsv_schedule_dispatch.
 #ifndef MICROPY_BOARD_PENDSV_ENTRIES
 #define MICROPY_BOARD_PENDSV_ENTRIES

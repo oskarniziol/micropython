@@ -42,16 +42,15 @@
 #include "nrf_clock.h"
 #endif
 
-volatile uint32_t uwTick = 0;
 
-void SysTick_Handler(void) {
-    uint32_t next_tick = uwTick + 1;
-    uwTick = next_tick;
+// void SysTick_Handler(void) {
+//     uint32_t next_tick = uwTick + 1;
+//     uwTick = next_tick;
 
-    if (soft_timer_next == next_tick) {
-        pendsv_schedule_dispatch(PENDSV_DISPATCH_SOFT_TIMER, soft_timer_handler);
-    }
-}
+//     if (soft_timer_next == next_tick) {
+//         pendsv_schedule_dispatch(PENDSV_DISPATCH_SOFT_TIMER, soft_timer_handler);
+//     }
+// }
 
 #if MICROPY_PY_TIME_TICKS
 
@@ -108,6 +107,19 @@ static void rtc_irq_time(nrfx_rtc_int_type_t event) {
     if (event == NRFX_RTC_INT_COMPARE0) {
         RTC_RESCHEDULE_CC(rtc1, 0, RTC_TICK_INCREASE_MSEC)
     }
+
+    if (event == NRFX_RTC_INT_COMPARE1) {
+        pendsv_schedule_dispatch(PENDSV_DISPATCH_SOFT_TIMER, soft_timer_handler);
+    }
+}
+
+uint32_t soft_timer_get_ms(void) {
+    return mp_hal_ticks_ms();
+}
+
+void soft_timer_schedule_at_ms(uint32_t ticks_ms) {
+    uint32_t counter = (uint32_t)((uint64_t)ticks_ms * 4096 / 125);
+    nrfx_rtc_cc_set(&rtc1, 1, nrfx_rtc_counter_get(&rtc1) + counter, true); \
 }
 
 void rtc1_init_time_ticks(void) {
