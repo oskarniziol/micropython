@@ -123,13 +123,18 @@ void mp_hal_delay_us(mp_uint_t us);
 #define NRFX_IRQ_PENDING_CLEAR(irq_number) sd_nvic_ClearPendingIRQ(irq_number)
 #endif
 
-#define NRFX_CRITICAL_SECTION_ENTER() \
-    { \
-        uint8_t _is_nested_critical_region; \
-        sd_nvic_critical_region_enter(&_is_nested_critical_region);
+#define MICROPY_BEGIN_ATOMIC_SECTION()     MICROPY_BEGIN_ATOMIC_SECTION()
+#define MICROPY_END_ATOMIC_SECTION(state)  MICROPY_END_ATOMIC_SECTION(state)
 
-#define NRFX_CRITICAL_SECTION_EXIT() \
-    sd_nvic_critical_region_exit(_is_nested_critical_region); \
+
+static inline uint8_t MICROPY_BEGIN_ATOMIC_SECTION() {
+    uint8_t _is_nested_critical_region;
+    sd_nvic_critical_region_enter(&_is_nested_critical_region);
+    return _is_nested_critical_region;
+}
+
+static inline void MICROPY_END_ATOMIC_SECTION(uint8_t _is_nested_critical_region) {
+    sd_nvic_critical_region_exit(_is_nested_critical_region);
 }
 
 #else // BLUETOOTH_SD
@@ -142,11 +147,28 @@ void mp_hal_delay_us(mp_uint_t us);
 
 // Source:
 // https://devzone.nordicsemi.com/f/nordic-q-a/8572/disable-interrupts-and-enable-interrupts-if-they-where-enabled/31347#31347
-#define NRFX_CRITICAL_SECTION_ENTER() { int _old_primask = __get_PRIMASK(); __disable_irq();
-#define NRFX_CRITICAL_SECTION_EXIT() __set_PRIMASK(_old_primask); }
+static inline uint8_t MICROPY_BEGIN_ATOMIC_SECTION() {
+    int _old_primask = __get_PRIMASK();
+    __disable_irq();
+    return _old_primask;
+}
+static inline void MICROPY_END_ATOMIC_SECTION(uint8_t _old_primask) {
+    __set_PRIMASK(_old_primask);
+}
 
 #endif // !BLUETOOTH_SD
 
+/**
+ * @brief Macro for entering into a critical section.
+ */
+#define NRFX_CRITICAL_SECTION_ENTER()  { uint8_t __state = MICROPY_BEGIN_ATOMIC_SECTION();
+
+/**
+ * @brief Macro for exiting from a critical section.
+ */
+#define NRFX_CRITICAL_SECTION_EXIT()     MICROPY_END_ATOMIC_SECTION(__state); }
+
+// ------------------------------------------------------------------------------
 #define NRFX_IRQ_IS_ENABLED(irq_number) (0 != (NVIC->ISER[irq_number / 32] & (1UL << (irq_number % 32))))
 
 #endif // NRFX_GLUE_H

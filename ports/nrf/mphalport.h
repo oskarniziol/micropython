@@ -32,6 +32,7 @@
 #include "pin.h"
 #include "nrf_gpio.h"
 #include "nrfx_config.h"
+#include "nrfx_glue.h"
 
 typedef enum
 {
@@ -61,12 +62,13 @@ const char *nrfx_error_code_lookup(uint32_t err_code);
 
 static inline uint32_t raise_irq_pri(uint32_t pri) {
     (void)pri;
-    return 0;
+    return NRFX_CRITICAL_SECTION_ENTER();
 }
 
 static inline void restore_irq_pri(uint32_t basepri) {
-    (void)basepri;
+    NRFX_CRITICAL_SECTION_EXIT(basepri);
 }
+
 #define IRQ_PRI_PENDSV          ((1 << __NVIC_PRIO_BITS) - 1)
 
 #else

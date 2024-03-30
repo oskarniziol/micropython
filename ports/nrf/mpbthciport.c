@@ -63,6 +63,7 @@ void mp_bluetooth_hci_init(void) {
         0,
         mp_bluetooth_hci_soft_timer_callback
         );
+    mp_bluetooth_hci_poll_now();
 }
 
 void mp_bluetooth_hci_deinit(void) {

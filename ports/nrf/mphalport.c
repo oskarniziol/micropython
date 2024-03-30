@@ -42,16 +42,6 @@
 #include "nrf_clock.h"
 #endif
 
-
-// void SysTick_Handler(void) {
-//     uint32_t next_tick = uwTick + 1;
-//     uwTick = next_tick;
-
-//     if (soft_timer_next == next_tick) {
-//         pendsv_schedule_dispatch(PENDSV_DISPATCH_SOFT_TIMER, soft_timer_handler);
-//     }
-// }
-
 #if MICROPY_PY_TIME_TICKS
 
 // Use RTC1 for time ticks generation (ms and us) with 32kHz tick resolution

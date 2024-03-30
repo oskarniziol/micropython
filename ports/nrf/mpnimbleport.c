@@ -63,7 +63,7 @@ void mp_bluetooth_hci_controller_init(void) {
     ble_ll_hci_send_noop();
 
     // Start polling for date.
-    mp_bluetooth_hci_poll_now();
+    mp_bluetooth_hci_init();
 }
 
 void mp_bluetooth_hci_controller_deinit(void) {

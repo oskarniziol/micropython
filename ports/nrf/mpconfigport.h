@@ -373,6 +373,7 @@ long unsigned int rng_generate_random_word(void);
 // to know the machine-specific values, see irq.h.
 
 #include <nrf.h>
+// #include "nrfx_glue.h"
 
 static inline void enable_irq(mp_uint_t state) {
     __set_PRIMASK(state);
@@ -383,9 +384,6 @@ static inline mp_uint_t disable_irq(void) {
     __disable_irq();
     return state;
 }
-
-#define MICROPY_BEGIN_ATOMIC_SECTION()     disable_irq()
-#define MICROPY_END_ATOMIC_SECTION(state)  enable_irq(state)
 
 #endif
 
