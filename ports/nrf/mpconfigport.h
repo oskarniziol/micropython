@@ -327,6 +327,9 @@ long unsigned int rng_generate_random_word(void);
 #define MP_STATE_PORT MP_STATE_VM
 
 #if MICROPY_HW_USB_CDC
+#ifndef MICROPY_HW_USB_CDC_TX_TIMEOUT
+#define MICROPY_HW_USB_CDC_TX_TIMEOUT (500)
+#endif
 #include "device/usbd.h"
 #define MICROPY_HW_USBDEV_TASK_HOOK extern void tud_task(void); tud_task();
 #else

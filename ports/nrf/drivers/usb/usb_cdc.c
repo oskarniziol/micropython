@@ -37,6 +37,7 @@
 #include "py/runtime.h"
 #include "shared/runtime/interrupt_char.h"
 #include "shared/tinyusb/mp_usbd.h"
+#include "extmod/misc.h"
 
 #ifdef BLUETOOTH_SD
 #include "nrf_sdm.h"
@@ -113,13 +114,13 @@ static int cdc_rx_char(void) {
     return ringbuf_get((ringbuf_t*)&rx_ringbuf);
 }
 
-static bool cdc_tx_any(void) {
-    return tx_ringbuf.iput != tx_ringbuf.iget;
-}
+// static bool cdc_tx_any(void) {
+//     return tx_ringbuf.iput != tx_ringbuf.iget;
+// }
 
-static int cdc_tx_char(void) {
-    return ringbuf_get((ringbuf_t*)&tx_ringbuf);
-}
+// static int cdc_tx_char(void) {
+//     return ringbuf_get((ringbuf_t*)&tx_ringbuf);
+// }
 
 static void cdc_task(bool tx)
 {
@@ -136,20 +137,20 @@ static void cdc_task(bool tx)
             }
         }
 
-        if (tx) {
-            int chars = 0;
-            while (cdc_tx_any()) {
-                if (chars < 64) {
-                    tud_cdc_write_char(cdc_tx_char());
-                    chars++;
-                } else {
-                    chars = 0;
-                    tud_cdc_write_flush();
-                }
-            }
+        // if (tx) {
+        //     int chars = 0;
+        //     while (cdc_tx_any()) {
+        //         if (chars < 64) {
+        //             tud_cdc_write_char(cdc_tx_char());
+        //             chars++;
+        //         } else {
+        //             chars = 0;
+        //             tud_cdc_write_flush();
+        //         }
+        //     }
 
-            tud_cdc_write_flush();
-        }
+        //     tud_cdc_write_flush();
+        // }
     }
 }
 
@@ -231,12 +232,62 @@ int mp_hal_stdin_rx_chr(void) {
     return 0;
 }
 
+// mp_uint_t mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
+//     for (const char *top = str + len; str < top; str++) {
+//         ringbuf_put((ringbuf_t*)&tx_ringbuf, *str);
+//         usb_cdc_loop();
+//     }
+//     return len;
+// }
+
+// Send string of given length
 mp_uint_t mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
-    for (const char *top = str + len; str < top; str++) {
-        ringbuf_put((ringbuf_t*)&tx_ringbuf, *str);
-        usb_cdc_loop();
+    mp_uint_t ret = len;
+    bool did_write = false;
+    #if MICROPY_HW_ENABLE_UART_REPL
+    mp_uart_write_strn(str, len);
+    did_write = true;
+    #endif
+
+    #if MICROPY_HW_USB_CDC
+    if (tud_cdc_connected()) {
+        size_t i = 0;
+        while (i < len) {
+            uint32_t n = len - i;
+            if (n > CFG_TUD_CDC_EP_BUFSIZE) {
+                n = CFG_TUD_CDC_EP_BUFSIZE;
+            }
+            int timeout = 0;
+            // Wait with a max of USC_CDC_TIMEOUT ms
+            while (n > tud_cdc_write_available() && timeout++ < MICROPY_HW_USB_CDC_TX_TIMEOUT) {
+                mp_event_wait_ms(1);
+
+                // Explicitly run the USB stack as the scheduler may be locked (eg we
+                // are in an interrupt handler), while there is data pending.
+                //mp_usbd_task();
+                tud_task_ext(0, false);
+            }
+            if (timeout >= MICROPY_HW_USB_CDC_TX_TIMEOUT) {
+                ret = i;
+                break;
+            }
+            uint32_t n2 = tud_cdc_write(str + i, n);
+            tud_cdc_write_flush();
+            i += n2;
+        }
+        ret = MIN(i, ret);
+        did_write = true;
     }
-    return len;
+    #endif
+
+    #if MICROPY_PY_OS_DUPTERM
+    int dupterm_res = mp_os_dupterm_tx_strn(str, len);
+    if (dupterm_res >= 0) {
+        did_write = true;
+        ret = MIN((mp_uint_t)dupterm_res, ret);
+    }
+    #endif
+    return did_write ? ret : 0;
 }
 
 void mp_hal_stdout_tx_strn_cooked(const char *str, mp_uint_t len) {
