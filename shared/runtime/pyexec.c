@@ -553,14 +553,16 @@ void pyexec_print_banner() {
         #ifdef MICROPY_EVENT_POLL_HOOK
         MICROPY_EVENT_POLL_HOOK
         #endif
-        #ifdef __WFI
-        __WFI();
-        #else
-        #ifdef __WFE
-        __WFE();
-        #endif
-        #endif
+        // #ifdef __WFI
+        // __WFI();
+        // #else
+        // #ifdef __WFE
+        // __WFE();
+        // #endif
+        // #endif
     }
+    // mp_hal_delay_ms(4);
+
     mp_hal_stdout_tx_str(MICROPY_BANNER_NAME_AND_VERSION);
     mp_hal_stdout_tx_str("; " MICROPY_BANNER_MACHINE);
     mp_hal_stdout_tx_str("\r\n");
