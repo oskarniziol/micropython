@@ -143,5 +143,13 @@
 #endif
 
 #endif // MICROPY_HW_ENABLE_USBDEV
+// #define CFG_TUSB_DEBUG 3
+// static const mp_print_t debugger_print = {NULL, debugger_write};
+// #define CFG_TUSB_DEBUG_PRINTF(s, ...)  mp_printf(debugger_print, s, ...);
+
+#define CFG_TUSB_DEBUG_PRINTF debugger_printf
+int debugger_printf(const char *fmt, ...);
+
+// #define CFG_TUSB_DEBUG 2
 
 #endif // MICROPY_INCLUDED_SHARED_TINYUSB_TUSB_CONFIG_H

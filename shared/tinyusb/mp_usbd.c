@@ -24,6 +24,7 @@
  * THE SOFTWARE.
  */
 
+#include <stdarg.h>
 #include "py/mpconfig.h"
 
 #if MICROPY_HW_ENABLE_USBDEV
@@ -47,6 +48,7 @@ void mp_usbd_task_callback(mp_sched_node_t *node) {
 
 #endif // !MICROPY_HW_ENABLE_USB_RUNTIME_DEVICE
 
+#if 0
 extern void __real_dcd_event_handler(dcd_event_t const *event, bool in_isr);
 
 // If -Wl,--wrap=dcd_event_handler is passed to the linker, then this wrapper
@@ -61,6 +63,7 @@ TU_ATTR_FAST_FUNC void mp_usbd_schedule_task(void) {
     static mp_sched_node_t usbd_task_node;
     mp_sched_schedule_node(&usbd_task_node, mp_usbd_task_callback);
 }
+#endif
 
 void mp_usbd_hex_str(char *out_str, const uint8_t *bytes, size_t bytes_len) {
     size_t hex_len = bytes_len * 2;
@@ -71,5 +74,79 @@ void mp_usbd_hex_str(char *out_str, const uint8_t *bytes, size_t bytes_len) {
     }
     out_str[hex_len] = 0;
 }
+
+
+#include "py/mpprint.h"
+
+TU_ATTR_USED void debugger_write(void *fhdl, const char *buf, size_t count);
+static const mp_print_t debugger_print = {NULL, debugger_write};
+
+#define CFG_TUSB_DEBUG_PRINTF debugger_printf
+
+int debugger_printf(const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = mp_vprintf(&debugger_print, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+
+#if defined(LOGGER_RTT)
+// Logging with RTT
+
+// If using SES IDE, use the Syscalls/SEGGER_RTT_Syscalls_SES.c instead
+#include "SEGGER_RTT.h"
+
+TU_ATTR_USED void debugger_write(void *fhdl, const char *buf, size_t count) {
+    (void)fhdl;
+    SEGGER_RTT_Write(0, (const char *)buf, (int)count);
+}
+
+TU_ATTR_USED int debugger_read(int fhdl, char *buf, size_t count) {
+    (void)fhdl;
+    int rd = (int)SEGGER_RTT_Read(0, buf, count);
+    return (rd > 0) ? rd : -1;
+}
+
+
+#elif defined(LOGGER_SWO)
+// Logging with SWO for ARM Cortex
+
+#include "board_mcu.h"
+
+TU_ATTR_USED void debugger_write(void *fhdl, const char *buf, size_t count) {
+    (void)fhdl;
+    uint8_t const *buf8 = (uint8_t const *)buf;
+
+    for (size_t i = 0; i < count; i++) {
+        ITM_SendChar(buf8[i]);
+    }
+}
+
+TU_ATTR_USED int debugger_read(int fhdl, char *buf, size_t count) {
+    (void)fhdl;
+    (void)buf;
+    (void)count;
+    return 0;
+}
+
+#else
+
+// Default logging with on-board UART
+TU_ATTR_USED void debugger_write(void *fhdl, const char *buf, size_t count) {
+    (void)fhdl;
+    // board_uart_write(buf, (int) count);
+}
+
+TU_ATTR_USED int debugger_read(int fhdl, char *buf, size_t count) {
+    (void)fhdl;
+    // int rd = board_uart_read((uint8_t*) buf, (int) count);
+    // return (rd > 0) ? rd : -1
+    return count;
+}
+
+#endif
+
 
 #endif // MICROPY_HW_ENABLE_USBDEV
