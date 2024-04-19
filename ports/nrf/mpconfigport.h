@@ -330,8 +330,15 @@ long unsigned int rng_generate_random_word(void);
 #ifndef MICROPY_HW_USB_CDC_TX_TIMEOUT
 #define MICROPY_HW_USB_CDC_TX_TIMEOUT (500)
 #endif
-#include "device/usbd.h"
-#define MICROPY_HW_USBDEV_TASK_HOOK extern void tud_task(void); tud_task();
+// Device configuration
+
+#define CFG_TUSB_MCU                OPT_MCU_NRF5X
+#define CFG_TUSB_MEM_SECTION
+#define CFG_TUSB_MEM_ALIGN          TU_ATTR_ALIGNED(4)
+#define CFG_TUD_ENDOINT0_SIZE       (64)
+
+// #include "device/usbd.h"
+#define MICROPY_HW_USBDEV_TASK_HOOK extern void mp_usbd_task(void); mp_usbd_task();
 #else
 #define MICROPY_HW_USBDEV_TASK_HOOK ;
 #endif

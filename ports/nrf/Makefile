@@ -81,6 +81,7 @@ INC += -I./modules/ble
 INC += -I./modules/board
 INC += -I./modules/nrf
 INC += -I../../shared/readline
+INC += -I../../shared/tinyusb
 INC += -I./drivers/bluetooth
 INC += -I./drivers
 INC += -I../../lib/nrfx/
@@ -186,6 +187,7 @@ SRC_SHARED_C += $(addprefix shared/,\
 	runtime/sys_stdio_mphal.c \
 	runtime/interrupt_char.c \
 	tinyusb/mp_cdc_common.c \
+	tinyusb/mp_usbd.c \
 	timeutils/timeutils.c \
 	)
 
@@ -258,6 +260,26 @@ SRC_C += $(addprefix lib/tinyusb/src/,\
 	tusb.c \
 	portable/nordic/nrf5x/dcd_nrf5x.c \
 	)
+
+# Log level is mapped to TUSB DEBUG option
+ifneq ($(TUSB_DEBUG_LOG),)
+  #CMAKE_DEFSYM +=	-DLOG=$(LOG)
+  CFLAGS += -DCFG_TUSB_DEBUG=$(TUSB_DEBUG_LOG)
+endif
+
+# Logger: default is uart, can be set to rtt or swo
+# ifneq ($(TUSB_DEBUG_LOGGER),)
+# 	CMAKE_DEFSYM +=	-DLOGGER=$(TUSB_DEBUG_LOGGER)
+# endif
+
+ifeq ($(TUSB_DEBUG_LOGGER),rtt)
+  CFLAGS += -DLOGGER_RTT -DSEGGER_RTT_MODE_DEFAULT=SEGGER_RTT_MODE_BLOCK_IF_FIFO_FULL
+  RTT_SRC = lib/tinyusb/lib/SEGGER_RTT
+  INC   += -I$(TOP)/$(RTT_SRC)/RTT
+  SRC_C += $(RTT_SRC)/RTT/SEGGER_RTT.c
+else ifeq ($(TUSB_DEBUG_LOGGER),swo)
+  CFLAGS += -DLOGGER_SWO
+endif
 
 endif
 

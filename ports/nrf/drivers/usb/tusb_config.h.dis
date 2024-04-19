@@ -41,4 +41,13 @@
 #define CFG_TUD_CDC_RX_BUFSIZE      (64)
 #define CFG_TUD_CDC_TX_BUFSIZE      (64)
 
+
+#define CFG_TUSB_DEBUG 3
+//extern int CFG_TUSB_DEBUG_PRINTF(const char *format, ...);
+
+// extern void debugger_write(void * fhdl, const char *buf, size_t count);
+// static const mp_print_t debugger_print = {NULL, debugger_write};
+// #define CFG_TUSB_DEBUG_PRINTF(...) // mp_printf(&debugger_print, __VA_ARGS__)
+
+
 #endif // MICROPY_INCLUDED_NRF_TUSB_CONFIG_H
