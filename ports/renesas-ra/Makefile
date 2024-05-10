@@ -174,7 +174,7 @@ SHARED_SRC_C += $(addprefix shared/,\
 	runtime/stdout_helpers.c \
 	runtime/sys_stdio_mphal.c \
 	timeutils/timeutils.c \
-	tinyusb/mp_cdc_common.c \
+	tinyusb/mp_usbd_cdc.c \
 	tinyusb/mp_usbd.c \
 	tinyusb/mp_usbd_descriptor.c \
 	)
