@@ -86,40 +86,55 @@ void tud_cdc_rx_cb(uint8_t itf) {
 
 mp_uint_t mp_usbd_cdc_tx_strn(const char *str, mp_uint_t len) {
     size_t i = 0;
-    if (tud_cdc_connected()) {
-        while (i < len) {
-            uint32_t n = len - i;
-            if (n > CFG_TUD_CDC_EP_BUFSIZE) {
-                n = CFG_TUD_CDC_EP_BUFSIZE;
-            }
-            int timeout = 0;
-            // Wait with a max of USC_CDC_TIMEOUT ms
-            while (n > tud_cdc_write_available() && timeout++ < MICROPY_HW_USB_CDC_TX_TIMEOUT) {
-                mp_event_wait_ms(1);
-
-                // Explicitly run the USB stack as the scheduler may be locked (eg we
-                // are in an interrupt handler), while there is data pending.
-                mp_usbd_task();
-            }
-            if (timeout >= MICROPY_HW_USB_CDC_TX_TIMEOUT) {
-                break;
-            }
-            uint32_t n2 = tud_cdc_write(str + i, n);
-            tud_cdc_write_flush();
-            i += n2;
+    while (i < len) {
+        uint32_t n = len - i;
+        if (n > CFG_TUD_CDC_EP_BUFSIZE) {
+            n = CFG_TUD_CDC_EP_BUFSIZE;
         }
+        int timeout = 0;
+        // If cdc port is connected but the buffer is full,
+        // wait for up to USC_CDC_TIMEOUT ms
+        while (n > tud_cdc_write_available()
+               && timeout++ < MICROPY_HW_USB_CDC_TX_TIMEOUT
+               && tud_cdc_connected()) {
+            mp_event_wait_ms(1);
+
+            // Explicitly run the USB stack as the scheduler may be locked (eg we
+            // are in an interrupt handler), while there is data pending.
+            mp_usbd_task();
+        }
+        // Limit write to available space in tx buffer.
+        // This will fill the buffer at startup regardless of whether
+        // the cdc port is open.
+        n = MIN(n, tud_cdc_write_available());
+        if (n == 0) {
+            break;
+        }
+        uint32_t n2 = tud_cdc_write(str + i, n);
+        tud_cdc_write_flush();
+        i += n2;
     }
     return i;
 }
 
-#if MICROPY_HW_USB_CDC_1200BPS_TOUCH && MICROPY_HW_ENABLE_USBDEV
+static int8_t cdc_connected_flush_delay = 0;
 
+void tud_sof_cb(uint32_t frame_count) {
+    if (--cdc_connected_flush_delay < 0) {
+        // Finished on-connection delat, disable SOF interrupt again.
+        tud_sof_cb_enable(false);
+        tud_cdc_write_flush();
+    }
+}
+
+#if MICROPY_HW_USB_CDC_1200BPS_TOUCH
 static mp_sched_node_t mp_bootloader_sched_node;
 
 static void usbd_cdc_run_bootloader_task(mp_sched_node_t *node) {
     mp_hal_delay_ms(250);
     machine_bootloader(0, NULL);
 }
+#endif
 
 void
 #if MICROPY_HW_USB_EXTERNAL_TINYUSB
@@ -128,6 +143,15 @@ mp_usbd_line_state_cb
 tud_cdc_line_state_cb
 #endif
     (uint8_t itf, bool dtr, bool rts) {
+
+    if (dtr) {
+        // A host application has started to open the cdc serial port.
+        // Wait a few ms for host to be ready then send tx buffer.
+        // High speed connection SOF fires at 125us, full speed at 1ms.
+        cdc_connected_flush_delay = (tud_speed_get() == TUSB_SPEED_HIGH) ? 128 : 16;
+        tud_sof_cb_enable(true);
+    }
+    #if MICROPY_HW_USB_CDC_1200BPS_TOUCH
     if (dtr == false && rts == false) {
         // Device is disconnected.
         cdc_line_coding_t line_coding;
@@ -137,7 +161,7 @@ tud_cdc_line_state_cb
             mp_sched_schedule_node(&mp_bootloader_sched_node, usbd_cdc_run_bootloader_task);
         }
     }
+    #endif
 }
 
-#endif
 #endif
