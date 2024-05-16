@@ -159,8 +159,7 @@
 #define MICROPY_STREAMS_NON_BLOCK   (1)
 #define MICROPY_CAN_OVERRIDE_BUILTINS (1)
 #define MICROPY_USE_INTERNAL_ERRNO  (1)
-#if MICROPY_HW_USB_CDC_1200BPS_TOUCH
-#define MICROPY_HW_ENABLE_USBDEV    (1)
+#if MICROPY_HW_ENABLE_USBDEV
 #define MICROPY_ENABLE_SCHEDULER    (1)
 #define MICROPY_SCHEDULER_STATIC_NODES (1)
 #endif
@@ -333,8 +332,19 @@ long unsigned int rng_generate_random_word(void);
 #define MP_STATE_PORT MP_STATE_VM
 
 #if MICROPY_HW_USB_CDC
-#include "device/usbd.h"
-#define MICROPY_HW_USBDEV_TASK_HOOK extern void tud_task(void); tud_task();
+// Miscellaneous settings
+
+#ifndef MICROPY_HW_USB_VID
+#define MICROPY_HW_USB_VID  (0xf055)
+#endif
+#ifndef MICROPY_HW_USB_PID
+#define MICROPY_HW_USB_PID  (0x9802)
+#endif
+
+#ifndef MICROPY_HW_USB_CDC_TX_TIMEOUT
+#define MICROPY_HW_USB_CDC_TX_TIMEOUT (500)
+#endif
+#define MICROPY_HW_USBDEV_TASK_HOOK extern void mp_usbd_task(void); mp_usbd_task();
 #else
 #define MICROPY_HW_USBDEV_TASK_HOOK ;
 #endif
