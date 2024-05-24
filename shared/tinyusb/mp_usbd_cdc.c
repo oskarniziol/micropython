@@ -117,13 +117,20 @@ mp_uint_t mp_usbd_cdc_tx_strn(const char *str, mp_uint_t len) {
     return i;
 }
 
+static volatile uint32_t frame_diag[129];
+
 static int8_t cdc_connected_flush_delay = 0;
 
 void tud_sof_cb(uint32_t frame_count) {
+    frame_diag[cdc_connected_flush_delay] = frame_count;
     if (--cdc_connected_flush_delay < 0) {
         // Finished on-connection delat, disable SOF interrupt again.
         tud_sof_cb_enable(false);
         tud_cdc_write_flush();
+        mp_printf(&mp_plat_print, "SOF %ld %ld %ld %ld %ld %ld %ld %ld\n",
+            frame_diag[0], frame_diag[1], frame_diag[2], frame_diag[3],
+            frame_diag[4], frame_diag[5], frame_diag[6], frame_diag[7]
+            );
     }
 }
 
