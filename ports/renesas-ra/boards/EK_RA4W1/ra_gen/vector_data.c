@@ -32,8 +32,12 @@ BSP_DONT_REMOVE const fsp_vector_t g_vector_table[BSP_ICU_VECTOR_MAX_ENTRIES] BS
     [25] = spi_eri_isr,         /* SPI0 ERI (Error) */
     [26] = iic_master_rxi_isr,         /* IIC0 RXI (Receive data full) */
     [27] = iic_master_txi_isr,         /* IIC0 TXI (Transmit data empty) */
-    [28] = iic_master_tei_isr,         /* IIC0 TEI (Transmit end) */
-    [29] = iic_master_eri_isr,         /* IIC0 ERI (Transfer error) */
+    // [28] = iic_master_tei_isr,         /* IIC0 TEI (Transmit end) */
+    // [29] = iic_master_eri_isr,         /* IIC0 ERI (Transfer error) */
+    [28] = usbfs_interrupt_handler,         /* USBFS INT (USBFS interrupt) */
+    [29] = usbfs_d0fifo_handler,         /* USBFS FIFO 0 (DMA transfer request 0) */
+    [30] = usbfs_d1fifo_handler,         /* USBFS FIFO 1 (DMA transfer request 1) */
+    [31] = usbfs_resume_handler,         /* USBFS RESUME (USBFS resume interrupt) */
 };
 const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_MAX_ENTRIES] =
 {
@@ -65,7 +69,11 @@ const bsp_interrupt_event_t g_interrupt_event_link_select[BSP_ICU_VECTOR_MAX_ENT
     [25] = BSP_PRV_IELS_ENUM(EVENT_SPI0_ERI),         /* SPI0 ERI (Error) */
     [26] = BSP_PRV_IELS_ENUM(EVENT_IIC0_RXI),         /* IIC0 RXI (Receive data full) */
     [27] = BSP_PRV_IELS_ENUM(EVENT_IIC0_TXI),         /* IIC0 TXI (Transmit data empty) */
-    [28] = BSP_PRV_IELS_ENUM(EVENT_IIC0_TEI),         /* IIC0 TEI (Transmit end) */
-    [29] = BSP_PRV_IELS_ENUM(EVENT_IIC0_ERI),         /* IIC0 ERI (Transfer error) */
+    // [28] = BSP_PRV_IELS_ENUM(EVENT_IIC0_TEI),         /* IIC0 TEI (Transmit end) */
+    // [29] = BSP_PRV_IELS_ENUM(EVENT_IIC0_ERI),         /* IIC0 ERI (Transfer error) */
+    [28] = BSP_PRV_IELS_ENUM(EVENT_USBFS_INT),         /* USBFS INT (USBFS interrupt) */
+    [29] = BSP_PRV_IELS_ENUM(EVENT_USBFS_FIFO_0),         /* USBFS FIFO 0 (DMA transfer request 0) */
+    [30] = BSP_PRV_IELS_ENUM(EVENT_USBFS_FIFO_1),         /* USBFS FIFO 1 (DMA transfer request 1) */
+    [31] = BSP_PRV_IELS_ENUM(EVENT_USBFS_RESUME),         /* USBFS RESUME (USBFS resume interrupt) */
 };
 #endif

@@ -6,7 +6,7 @@ extern "C" {
 #endif
 /* Number of interrupts allocated */
 #ifndef VECTOR_DATA_IRQ_COUNT
-#define VECTOR_DATA_IRQ_COUNT    (30)
+#define VECTOR_DATA_IRQ_COUNT    (32)
 #endif
 /* ISR prototypes */
 void sci_uart_rxi_isr(void);
@@ -25,6 +25,10 @@ void iic_master_rxi_isr(void);
 void iic_master_txi_isr(void);
 void iic_master_tei_isr(void);
 void iic_master_eri_isr(void);
+void usbfs_interrupt_handler(void);
+void usbfs_d0fifo_handler(void);
+void usbfs_d1fifo_handler(void);
+void usbfs_resume_handler(void);
 
 /* Vector table allocations */
 #define VECTOR_NUMBER_SCI1_RXI ((IRQn_Type)0)  /* SCI1 RXI (Received data full) */
@@ -83,10 +87,18 @@ void iic_master_eri_isr(void);
 #define IIC0_RXI_IRQn          ((IRQn_Type)26)  /* IIC0 RXI (Receive data full) */
 #define VECTOR_NUMBER_IIC0_TXI ((IRQn_Type)27)  /* IIC0 TXI (Transmit data empty) */
 #define IIC0_TXI_IRQn          ((IRQn_Type)27)  /* IIC0 TXI (Transmit data empty) */
-#define VECTOR_NUMBER_IIC0_TEI ((IRQn_Type)28)  /* IIC0 TEI (Transmit end) */
-#define IIC0_TEI_IRQn          ((IRQn_Type)28)  /* IIC0 TEI (Transmit end) */
-#define VECTOR_NUMBER_IIC0_ERI ((IRQn_Type)29)  /* IIC0 ERI (Transfer error) */
-#define IIC0_ERI_IRQn          ((IRQn_Type)29)  /* IIC0 ERI (Transfer error) */
+// #define VECTOR_NUMBER_IIC0_TEI ((IRQn_Type)28)  /* IIC0 TEI (Transmit end) */
+// #define IIC0_TEI_IRQn          ((IRQn_Type)28)  /* IIC0 TEI (Transmit end) */
+// #define VECTOR_NUMBER_IIC0_ERI ((IRQn_Type)29)  /* IIC0 ERI (Transfer error) */
+// #define IIC0_ERI_IRQn          ((IRQn_Type)29)  /* IIC0 ERI (Transfer error) */
+#define VECTOR_NUMBER_USBFS_INT ((IRQn_Type)28)  /* USBFS INT (USBFS interrupt) */
+#define USBFS_INT_IRQn          ((IRQn_Type)28)  /* USBFS INT (USBFS interrupt) */
+#define VECTOR_NUMBER_USBFS_FIFO_0 ((IRQn_Type)29)  /* USBFS FIFO 0 (DMA transfer request 0) */
+#define USBFS_FIFO_0_IRQn          ((IRQn_Type)29)  /* USBFS FIFO 0 (DMA transfer request 0) */
+#define VECTOR_NUMBER_USBFS_FIFO_1 ((IRQn_Type)30)  /* USBFS FIFO 1 (DMA transfer request 1) */
+#define USBFS_FIFO_1_IRQn          ((IRQn_Type)30)  /* USBFS FIFO 1 (DMA transfer request 1) */
+#define VECTOR_NUMBER_USBFS_RESUME ((IRQn_Type)31)  /* USBFS RESUME (USBFS resume interrupt) */
+#define USBFS_RESUME_IRQn          ((IRQn_Type)31)  /* USBFS RESUME (USBFS resume interrupt) */
 #ifdef __cplusplus
 }
 #endif

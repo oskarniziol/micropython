@@ -19,7 +19,7 @@
 #define MICROPY_HW_ENABLE_ADC       (1)
 #define MICROPY_HW_HAS_FLASH        (1)
 #define MICROPY_HW_ENABLE_INTERNAL_FLASH_STORAGE (1)
-
+#define MICROPY_HW_ENABLE_USBDEV  (1)
 // board config
 
 // UART
