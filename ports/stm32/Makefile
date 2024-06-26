@@ -121,16 +121,22 @@ endif
 # Configure floating point support
 ifeq ($(MICROPY_FLOAT_IMPL),double)
 CFLAGS += -DMICROPY_FLOAT_IMPL=MICROPY_FLOAT_IMPL_DOUBLE
-else
-ifeq ($(MICROPY_FLOAT_IMPL),none)
+else ifeq ($(MICROPY_FLOAT_IMPL),none)
 CFLAGS += -DMICROPY_FLOAT_IMPL=MICROPY_FLOAT_IMPL_NONE
 else
 CFLAGS += -DMICROPY_FLOAT_IMPL=MICROPY_FLOAT_IMPL_FLOAT
 CFLAGS += -fsingle-precision-constant
 endif
+
+# Configure linker include dir for ram/rom isr support
+ifeq ($(MICROPY_USE_RAM_ISR_UART_FLASH_FN),1)
+CFLAGS += -DMICROPY_USE_RAM_ISR_UART_FLASH_FN=1
+LD_ISR_DIR = boards/common_isr_ram
+else
+LD_ISR_DIR = boards/common_isr_rom
 endif
 
-LDFLAGS += -nostdlib -L $(LD_DIR) -L $(BUILD) $(addprefix -T,$(LD_FILES)) -Wl,-Map=$(@:.elf=.map) -Wl,--cref
+LDFLAGS += -nostdlib -L $(LD_DIR) -L $(LD_ISR_DIR) $(addprefix -T,$(LD_FILES)) -Wl,-Map=$(@:.elf=.map) -Wl,--cref
 LDFLAGS += -Wl,--defsym=_estack_reserve=8
 LIBS += "$(shell $(CC) $(CFLAGS) -print-libgcc-file-name)"
 
@@ -363,14 +369,13 @@ SRC_C += \
 SRC_O += \
 	$(STARTUP_FILE) \
 	$(SYSTEM_FILE)
-
+    
 ifeq ($(MCU_SERIES),$(filter $(MCU_SERIES),f0 g0 l0))
 CSUPEROPT = -Os # save some code space
 SRC_O += \
 	resethandler_m0.o \
 	shared/runtime/gchelper_thumb1.o
-else
-ifeq ($(MCU_SERIES),l1)
+else ifeq ($(MCU_SERIES),l1)
 CFLAGS += -DUSE_HAL_DRIVER
 SRC_O += \
 	resethandler_m3.o \
@@ -380,7 +385,6 @@ SRC_O += \
 	system_stm32.o \
 	resethandler.o \
 	shared/runtime/gchelper_thumb2.o
-endif
 endif
 
 HAL_SRC_C += $(addprefix $(STM32LIB_HAL_BASE)/Src/stm32$(MCU_SERIES)xx_,\
@@ -492,10 +496,6 @@ MICROPY_BLUETOOTH_BTSTACK_H4 ?= 1
 endif
 
 endif # MICROPY_PY_BLUETOOTH
-
-ifeq ($(MICROPY_USE_RAM_ISR_UART_FLASH_FN),1)
-CFLAGS += -DMICROPY_USE_RAM_ISR_UART_FLASH_FN=1
-endif
 
 # SRC_O should be placed first to work around this LTO bug with binutils <2.35:
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83967
@@ -714,20 +714,5 @@ $(GEN_CDCINF_HEADER): $(GEN_CDCINF_FILE) $(FILE2H) | $(HEADER_BUILD)
 $(GEN_CDCINF_FILE): $(CDCINF_TEMPLATE) $(INSERT_USB_IDS) $(USB_IDS_FILE) | $(HEADER_BUILD)
 	$(ECHO) "GEN $@"
 	$(Q)$(PYTHON) $(INSERT_USB_IDS) $(USB_IDS_FILE) $< > $@
-
-# Copy the required isr linker snippets to the build dir
-ifeq ($(MICROPY_USE_RAM_ISR_UART_FLASH_FN),1)
-$(BUILD)/common_isr_gen.ld $(BUILD)/common_isr_extratext_gen.ld: boards/common_isr_ram.ld $(BOARD_DIR)/mpconfigboard.mk
-	$(Q)cp boards/common_isr_ram.ld $(BUILD)/common_isr_gen.ld
-	$(Q)echo "" > $(BUILD)/common_isr_extratext_gen.ld
-
-else
-$(BUILD)/common_isr_gen.ld $(BUILD)/common_isr_extratext_gen.ld: boards/common_isr.ld boards/common_isr_extratext.ld $(BOARD_DIR)/mpconfigboard.mk
-	$(Q)cp boards/common_isr.ld $(BUILD)/common_isr_gen.ld
-	$(Q)cp boards/common_isr_extratext.ld $(BUILD)/common_isr_extratext_gen.ld
-endif
-
-$(OBJ): | $(BUILD)/common_isr_gen.ld $(BUILD)/common_isr_extratext_gen.ld
-
 
 include $(TOP)/py/mkrules.mk
