@@ -46,3 +46,18 @@ try:
     micropython.RingIO(None)
 except TypeError as ex:
     print(ex)
+
+# test linked / bidirectional buffers
+rba = micropython.RingIO(16)
+rbb = micropython.RingIO(16)
+rba.link(rbb)
+
+print(rba.write(b"foo"))
+print(rbb.write(b"bar"))
+print(rba.read())
+print(rbb.read())
+
+import os
+
+os.dupterm(rba, 4)
+rbb.write(b"bar")

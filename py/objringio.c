@@ -35,7 +35,10 @@
 typedef struct _micropython_ringio_obj_t {
     mp_obj_base_t base;
     ringbuf_t ringbuffer;
+    mp_obj_t linked;
 } micropython_ringio_obj_t;
+
+const mp_obj_type_t mp_type_micropython_ringio;
 
 static mp_obj_t micropython_ringio_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 1, 1, false);
@@ -55,8 +58,24 @@ static mp_obj_t micropython_ringio_make_new(const mp_obj_type_t *type, size_t n_
         // Allocate new buffer, add one extra to buff_size as ringbuf consumes one byte for tracking.
         ringbuf_alloc(&(self->ringbuffer), buff_size + 1);
     }
+    self->linked = NULL;
     return MP_OBJ_FROM_PTR(self);
 }
+
+static mp_obj_t micropython_ringio_link(mp_obj_t self_in, mp_obj_t other_in) {
+    micropython_ringio_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    if (other_in == mp_const_none) {
+        self->linked = NULL;
+    } else if (!mp_obj_is_type(other_in, &mp_type_micropython_ringio)) {
+        mp_raise_TypeError(MP_ERROR_TEXT("expected RingIO or None"));
+    } else {
+        micropython_ringio_obj_t *other = MP_OBJ_TO_PTR(other_in);
+        other->linked = self_in;
+        self->linked = other_in;
+    }
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_2(micropython_ringio_link_obj, micropython_ringio_link);
 
 static mp_uint_t micropython_ringio_read(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode) {
     micropython_ringio_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -68,8 +87,13 @@ static mp_uint_t micropython_ringio_read(mp_obj_t self_in, void *buf_in, mp_uint
 
 static mp_uint_t micropython_ringio_write(mp_obj_t self_in, const void *buf_in, mp_uint_t size, int *errcode) {
     micropython_ringio_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    size = MIN(size, ringbuf_free(&self->ringbuffer));
-    ringbuf_memcpy_put_internal(&(self->ringbuffer), buf_in, size);
+    ringbuf_t *rb = &(self->ringbuffer);
+    if (self->linked != NULL) {
+        micropython_ringio_obj_t *other = MP_OBJ_TO_PTR(self->linked);
+        rb = &(other->ringbuffer);
+    }
+    size = MIN(size, ringbuf_free(rb));
+    ringbuf_memcpy_put_internal(rb, buf_in, size);
     *errcode = 0;
     return size;
 }
@@ -102,6 +126,7 @@ static MP_DEFINE_CONST_FUN_OBJ_1(micropython_ringio_any_obj, micropython_ringio_
 
 static const mp_rom_map_elem_t micropython_ringio_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_any), MP_ROM_PTR(&micropython_ringio_any_obj) },
+    { MP_ROM_QSTR(MP_QSTR_link), MP_ROM_PTR(&micropython_ringio_link_obj) },
     { MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mp_stream_read_obj) },
     { MP_ROM_QSTR(MP_QSTR_readline), MP_ROM_PTR(&mp_stream_unbuffered_readline_obj) },
     { MP_ROM_QSTR(MP_QSTR_readinto), MP_ROM_PTR(&mp_stream_readinto_obj) },
