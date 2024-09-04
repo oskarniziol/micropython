@@ -41,7 +41,7 @@
 
 // emitters
 #define MICROPY_PERSISTENT_CODE_LOAD        (1)
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
+#if CONFIG_IDF_TARGET_ARCH_RISCV
 #define MICROPY_EMIT_RV32                   (1)
 #else
 #define MICROPY_EMIT_XTENSAWIN              (1)
