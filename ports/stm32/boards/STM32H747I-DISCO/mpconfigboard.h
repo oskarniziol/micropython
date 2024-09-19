@@ -107,7 +107,9 @@
 #define MICROPY_HW_RCC_QSPI_CLKSOURCE   (RCC_QSPICLKSOURCE_PLL2)
 
 // SMPS configuration
-#define MICROPY_HW_PWR_SMPS_CONFIG      (PWR_SMPS_1V8_SUPPLIES_LDO)
+// #define MICROPY_HW_PWR_SMPS_CONFIG      (PWR_LDO_SUPPLY)
+// #define MICROPY_HW_PWR_SMPS_CONFIG      (PWR_SMPS_1V8_SUPPLIES_LDO)
+#define MICROPY_HW_PWR_SMPS_CONFIG      (PWR_DIRECT_SMPS_SUPPLY)
 
 // Configure the analog switches for dual-pad pins.
 #define MICROPY_HW_ANALOG_SWITCH_PA0    (SYSCFG_SWITCH_PA0_OPEN)
@@ -222,43 +224,50 @@ extern struct _spi_bdev_t spi_bdev;
 #define GPIO_AF10_OTG_HS                    (GPIO_AF10_OTG2_HS)
 
 
-// SDRAM
-#define MICROPY_HW_SDRAM_SIZE               (64 / 8 * 1024 * 1024)  // 64 Mbit
+// SDRAM TODO update to: 8M x 32bit SDRAM is connected to SDRAM Bank1 of the STM32H747XIH6 FMC
+#define MICROPY_HW_SDRAM_SIZE               (256 * 1024 * 1024 / 8)  // 256 Mbit
 #define MICROPY_HW_SDRAM_STARTUP_TEST       (1)
 #define MICROPY_HW_SDRAM_TEST_FAIL_ON_ERROR (true)
-#define MICROPY_HW_FMC_SWAP_BANKS           (1)
+// #define MICROPY_HW_FMC_SWAP_BANKS           (1)
 
 // Timing configuration for 200MHz/2=100MHz (10ns)
 #define MICROPY_HW_SDRAM_CLOCK_PERIOD       2
+// #define MICROPY_HW_SDRAM_CAS_LATENCY        3
 #define MICROPY_HW_SDRAM_CAS_LATENCY        2
 #define MICROPY_HW_SDRAM_FREQUENCY          (100000) // 100 MHz
+// timing = <2 6 4 6 2 2 2>;
+// #define MICROPY_HW_SDRAM_TIMING_TMRD        (2)
+// #define MICROPY_HW_SDRAM_TIMING_TXSR        (7)
+// #define MICROPY_HW_SDRAM_TIMING_TRAS        (5)
+// #define MICROPY_HW_SDRAM_TIMING_TRC         (7)
+// #define MICROPY_HW_SDRAM_TIMING_TWR         (2)
+// #define MICROPY_HW_SDRAM_TIMING_TRP         (3)
+// #define MICROPY_HW_SDRAM_TIMING_TRCD        (3)
 #define MICROPY_HW_SDRAM_TIMING_TMRD        (2)
-#define MICROPY_HW_SDRAM_TIMING_TXSR        (7)
-#define MICROPY_HW_SDRAM_TIMING_TRAS        (5)
-#define MICROPY_HW_SDRAM_TIMING_TRC         (7)
+#define MICROPY_HW_SDRAM_TIMING_TXSR        (6)
+#define MICROPY_HW_SDRAM_TIMING_TRAS        (4)
+#define MICROPY_HW_SDRAM_TIMING_TRC         (6)
 #define MICROPY_HW_SDRAM_TIMING_TWR         (2)
-#define MICROPY_HW_SDRAM_TIMING_TRP         (3)
-#define MICROPY_HW_SDRAM_TIMING_TRCD        (3)
+#define MICROPY_HW_SDRAM_TIMING_TRP         (2)
+#define MICROPY_HW_SDRAM_TIMING_TRCD        (2)
 
+#define MICROPY_HW_SDRAM_COLUMN_BITS_NUM    9
 #define MICROPY_HW_SDRAM_ROW_BITS_NUM       12
-#define MICROPY_HW_SDRAM_MEM_BUS_WIDTH      16
-#define MICROPY_HW_SDRAM_REFRESH_CYCLES     4096
-
-#define MICROPY_HW_SDRAM_COLUMN_BITS_NUM    8
+#define MICROPY_HW_SDRAM_MEM_BUS_WIDTH      32
 #define MICROPY_HW_SDRAM_INTERN_BANKS_NUM   4
+// #define MICROPY_HW_SDRAM_REFRESH_CYCLES     ((uint32_t)0x0603)   /* SDRAM refresh counter (100Mhz SD clock) */
 #define MICROPY_HW_SDRAM_RPIPE_DELAY        0
 #define MICROPY_HW_SDRAM_RBURST             (1)
 #define MICROPY_HW_SDRAM_WRITE_PROTECTION   (0)
-
 #define MICROPY_HW_SDRAM_AUTOREFRESH_NUM    (8)
 #define MICROPY_HW_SDRAM_BURST_LENGTH       1
 #define MICROPY_HW_SDRAM_REFRESH_RATE       (64) // ms
 
 // SDRAM configuration
-#define MICROPY_HW_FMC_SDCKE0       (pin_H2)
-#define MICROPY_HW_FMC_SDNE0        (pin_H3)
-#define MICROPY_HW_FMC_SDNBL0       (pin_E0)
-#define MICROPY_HW_FMC_SDNBL1       (pin_E1)
+#define MICROPY_HW_FMC_SDCKE1       (pin_H7)
+#define MICROPY_HW_FMC_SDNE1        (pin_H6)
+// #define MICROPY_HW_FMC_SDNBL0       (pin_E0)
+// #define MICROPY_HW_FMC_SDNBL1       (pin_E1)
 #define MICROPY_HW_FMC_SDCLK        (pin_G8)
 #define MICROPY_HW_FMC_SDNCAS       (pin_G15)
 #define MICROPY_HW_FMC_SDNRAS       (pin_F11)
@@ -280,6 +289,9 @@ extern struct _spi_bdev_t spi_bdev;
 #define MICROPY_HW_FMC_A10          (pin_G0)
 #define MICROPY_HW_FMC_A11          (pin_G1)
 #define MICROPY_HW_FMC_A12          (pin_G2)
+// #define MICROPY_HW_FMC_A13          (pin_G)
+// #define MICROPY_HW_FMC_A14          (pin_G4)
+// #define MICROPY_HW_FMC_A15          (pin_G5)
 #define MICROPY_HW_FMC_D0           (pin_D14)
 #define MICROPY_HW_FMC_D1           (pin_D15)
 #define MICROPY_HW_FMC_D2           (pin_D0)
@@ -296,6 +308,22 @@ extern struct _spi_bdev_t spi_bdev;
 #define MICROPY_HW_FMC_D13          (pin_D8)
 #define MICROPY_HW_FMC_D14          (pin_D9)
 #define MICROPY_HW_FMC_D15          (pin_D10)
+#define MICROPY_HW_FMC_D16          (pin_H8)
+#define MICROPY_HW_FMC_D17          (pin_H9)
+#define MICROPY_HW_FMC_D18          (pin_H10)
+#define MICROPY_HW_FMC_D19          (pin_H11)
+#define MICROPY_HW_FMC_D20          (pin_H12)
+#define MICROPY_HW_FMC_D21          (pin_H13)
+#define MICROPY_HW_FMC_D22          (pin_H14)
+#define MICROPY_HW_FMC_D23          (pin_H15)
+#define MICROPY_HW_FMC_D24          (pin_I0)
+#define MICROPY_HW_FMC_D25          (pin_I1)
+#define MICROPY_HW_FMC_D26          (pin_I2)
+#define MICROPY_HW_FMC_D27          (pin_I3)
+#define MICROPY_HW_FMC_D28          (pin_I6)
+#define MICROPY_HW_FMC_D29          (pin_I7)
+#define MICROPY_HW_FMC_D30          (pin_I9)
+#define MICROPY_HW_FMC_D31          (pin_I10)
 
 // Ethernet via RMII
 #define MICROPY_HW_ETH_MDC          (pin_C1)
