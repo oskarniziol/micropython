@@ -180,16 +180,18 @@ void mp_spiflash_init(mp_spiflash_t *self) {
     // Ensure SPI flash is out of sleep mode
     mp_spiflash_deepsleep_internal(self, 0);
 
-    #if defined(CHECK_DEVID)
     // Validate device id
     uint32_t devid;
     int ret = mp_spiflash_read_cmd(self, CMD_RD_DEVID, 3, &devid);
+    #if defined(CHECK_DEVID)
     if (ret != 0 || devid != CHECK_DEVID) {
         mp_spiflash_release_bus(self);
         return;
     }
+    #else
+    printf("DEVID: %d / %lx\n", ret, devid);
     #endif
-
+    
     if (self->config->bus_kind == MP_SPIFLASH_BUS_QSPI) {
         // Set QE bit
         uint32_t sr = 0, cr = 0;

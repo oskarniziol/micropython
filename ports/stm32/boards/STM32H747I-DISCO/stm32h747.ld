@@ -7,10 +7,10 @@ MEMORY
 {
     FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 2048K   /* Total available flash */
     FLASH_START (rx)   : ORIGIN = 0x08000000, LENGTH = 128K    /* bootloader if installed */
-    /*FLASH_FS (r)    : ORIGIN = 0x08020000, LENGTH = 128K */    /* filesystem */
+    FLASH_FS (r)    : ORIGIN = 0x08020000, LENGTH = 128K     /* filesystem */
     FLASH_TEXT (rx) : ORIGIN = 0x08020000, LENGTH = 1408K   /* CM7 firmware */
     FLASH_CM4 (rx)  : ORIGIN = 0x08180000, LENGTH = 512K    /* CM4 firmware */
-    FLASH_FS (rx)  : ORIGIN = 0x90000000, LENGTH = 16384K  /* 16MBs external QSPI flash */
+    FLASH_EXT (rx)  : ORIGIN = 0x90000000, LENGTH = 16384K  /* 16MBs external QSPI flash */
 
     ITCM (xrw)      : ORIGIN = 0x00000000, LENGTH = 64K
     DTCM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K

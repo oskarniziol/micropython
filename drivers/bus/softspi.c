@@ -35,6 +35,14 @@ int mp_soft_spi_ioctl(void *self_in, uint32_t cmd) {
             mp_hal_pin_output(self->sck);
             mp_hal_pin_output(self->mosi);
             mp_hal_pin_input(self->miso);
+            if (self->hold) {
+                mp_hal_pin_write(self->hold, 1);
+                mp_hal_pin_output(self->hold);
+            }
+            if (self->wp) {
+                mp_hal_pin_write(self->wp, 1);
+                mp_hal_pin_output(self->wp);
+            }
             break;
 
         case MP_SPI_IOCTL_DEINIT:

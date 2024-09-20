@@ -46,6 +46,8 @@ typedef struct _mp_soft_spi_obj_t {
     mp_hal_pin_obj_t sck;
     mp_hal_pin_obj_t mosi;
     mp_hal_pin_obj_t miso;
+    mp_hal_pin_obj_t hold;
+    mp_hal_pin_obj_t wp;
 } mp_soft_spi_obj_t;
 
 extern const mp_spi_proto_t mp_soft_spi_proto;
