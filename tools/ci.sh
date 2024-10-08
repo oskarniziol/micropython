@@ -1,9 +1,9 @@
 #!/bin/bash
 
 if which nproc > /dev/null; then
-    MAKEOPTS="-j$(nproc)"
+    MAKEOPTS="-j$(nproc) BOARD=ESP32_GENERIC_C6"
 else
-    MAKEOPTS="-j$(sysctl -n hw.ncpu)"
+    MAKEOPTS="-j$(sysctl -n hw.ncpu) BOARD=ESP32_GENERIC_C6"
 fi
 
 # Ensure known OPEN_MAX (NO_FILES) limit.
